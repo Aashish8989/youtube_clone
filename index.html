@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vibetube</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1 class="logo-text">VibeTube</h1>
+        </div>
+        <div class="search-container">
+            <input type="text" placeholder="Search" class="search-bar" />
+            <button class="search-btn">🔍</button>
+        </div>
+    </header>
+
+    <div class="explore-bar">
+        <button class="active" data-category="all">All</button>
+        <button data-category="music">Music</button>
+        <button data-category="gaming">Gaming</button>
+        <button data-category="movies">Movies</button>
+        <button data-category="news">News</button>
+        <button data-category="live">Live</button>
+        <button data-category="sports">Sports</button>
+        <button data-category="podcast">Podcast</button>
+    </div>
+
+    <div class="container">
+        <aside class="sidebar">
+            <ul>
+                <li class="active">Home</li>
+                <li>Trending</li>
+                <li>Shorts</li>
+                <li>Subscriptions</li>
+                <li class="separator"></li>
+                <li>Liked Videos</li>
+                <li>History</li>
+            </ul>
+        </aside>
+
+        <main id="main-content"></main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
