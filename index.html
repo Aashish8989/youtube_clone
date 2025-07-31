@@ -1,54 +1,630 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vibetube</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VibeTube</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --background-primary: #0f0f0f;
+      --background-secondary: #222222;
+      --background-tertiary: #3f3f3f;
+      --text-primary: #ffffff;
+      --text-secondary: #aaaaaa;
+      --brand-red: #ff0000;
+      --border-color: #333333;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Roboto', sans-serif; background-color: var(--background-primary); color: var(--text-primary); }
+    a { text-decoration: none; color: inherit; }
+
+    header {
+      display: flex; align-items: center; justify-content: flex-start; gap: 100px;
+      background-color: var(--background-primary); padding: 10px 24px;
+      border-bottom: 1px solid var(--border-color); position: sticky; top: 0;
+      z-index: 1000; height: 60px;
+    }
+    .logo { cursor: pointer; }
+    .logo-text { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+    .search-container {
+      display: flex; flex: 1; justify-content: flex-start; max-width: 600px;
+    }
+    .search-bar {
+      width: 100%; padding: 10px 16px; border: 1px solid var(--border-color);
+      border-right: none; border-radius: 40px 0 0 40px; outline: none;
+      font-size: 16px; background-color: #121212; color: var(--text-primary);
+    }
+    .search-btn {
+      padding: 0 20px; background-color: var(--background-secondary);
+      border: 1px solid var(--border-color); border-radius: 0 40px 40px 0;
+      cursor: pointer; font-size: 18px;
+    }
+
+    .explore-bar {
+      background-color: var(--background-primary); padding: 12px 24px;
+      border-bottom: 1px solid var(--border-color); display: flex; gap: 12px;
+      overflow-x: auto; white-space: nowrap; position: sticky; top: 60px;
+      z-index: 999;
+    }
+    .explore-bar::-webkit-scrollbar { display: none; }
+    .explore-bar button {
+      background-color: var(--background-secondary); color: var(--text-primary);
+      border: 1px solid var(--border-color); padding: 8px 16px;
+      border-radius: 20px; cursor: pointer; font-size: 14px; flex-shrink: 0;
+    }
+    .explore-bar button.active {
+      background-color: var(--text-primary); color: var(--background-primary);
+    }
+
+    .container { display: flex; }
+    .sidebar {
+      width: 240px; background-color: var(--background-primary);
+      height: calc(100vh - 121px); padding-top: 12px; position: sticky;
+      top: 121px; overflow-y: auto; flex-shrink: 0;
+    }
+    .sidebar ul { list-style: none; padding: 0 12px; }
+    .sidebar li {
+      padding: 10px 12px; color: var(--text-primary); cursor: pointer;
+      border-radius: 8px; font-size: 14px;
+    }
+    .sidebar li.active { background-color: var(--background-secondary); font-weight: 500; }
+    .sidebar li:hover { background-color: var(--background-secondary); }
+    .sidebar .separator {
+      height: 1px; background-color: var(--border-color);
+      margin: 10px 0; padding: 0; cursor: default;
+    }
+
+    main { flex: 1; padding: 24px; }
+    .grid-view {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px 16px;
+    }
+    .video { cursor: pointer; }
+    .thumbnail-container {
+      position: relative; width: 100%; border-radius: 12px;
+      overflow: hidden; transition: border-radius 0.2s ease-in-out;
+      background-color: var(--background-secondary);
+    }
+    .video:hover .thumbnail-container { border-radius: 0; }
+    .thumbnail-container img {
+      width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block;
+    }
+    .video-details {
+      display: flex; gap: 12px; margin-top: 12px;
+    }
+    .video-details h3 {
+      font-size: 16px; font-weight: 500; line-height: 1.4;
+      color: var(--text-primary); display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .video-details p { color: var(--text-secondary); font-size: 14px; }
+
+    .player-view { display: flex; flex-direction: column; gap: 24px; }
+    .player-main-content { display: flex; flex-direction: column; gap: 24px; }
+    .player-main-column { flex: 2; min-width: 0; }
+    .player-iframe-container {
+      position: relative; width: 100%; padding-top: 56.25%;
+      background-color: #000; border-radius: 12px; overflow: hidden;
+    }
+    .player-iframe-container iframe {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;
+    }
+    .player-video-details { padding: 16px 0; }
+    .player-video-details h2 { font-size: 20px; font-weight: 500; margin-bottom: 8px; }
+    .channel-info {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 8px;
+    }
+    .channel-info p { color: var(--text-secondary); font-size: 14px; }
+    .subscribe-btn {
+      background-color: var(--text-primary); color: var(--background-primary);
+      font-weight: 500; border-radius: 20px; padding: 8px 16px;
+      cursor: pointer; border: none;
+    }
+    .subscribe-btn.subscribed {
+      background-color: var(--background-secondary); color: var(--text-secondary);
+    }
+    .player-video-details .actions {
+      display: flex; gap: 10px; margin-top: 10px; align-items: center;
+    }
+    .player-video-details .actions button {
+      background: var(--background-secondary); color: var(--text-primary);
+      border: none; padding: 10px 15px; border-radius: 20px;
+      cursor: pointer; font-size: 14px;
+    }
+    .like-btn { font-size: 24px; background: none !important; padding: 5px !important; }
+    .like-btn.liked { color: var(--brand-red); }
+    .player-suggestions-column {
+      flex: 1; min-width: 0; max-height: 80vh; overflow-y: auto;
+    }
+    .suggestion-item {
+      display: flex; gap: 12px; margin-bottom: 12px; cursor: pointer;
+    }
+    .suggestion-item img {
+      width: 160px; height: 90px; border-radius: 8px;
+      object-fit: cover; background-color: var(--background-secondary);
+      flex-shrink: 0;
+    }
+    .suggestion-item-details h4 {
+      font-size: 14px; font-weight: 500; margin-bottom: 4px;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .suggestion-item-details p {
+      font-size: 12px; color: var(--text-secondary);
+    }
+
+    .hidden { display: none; }
+    .loading-message, .error-message, .info-message {
+      text-align: center; color: var(--text-secondary);
+      font-size: 18px; padding: 40px;
+    }
+    .infinite-scroll-loader {
+      text-align: center; padding: 20px; width: 100%;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <h1 class="logo-text">VibeTube</h1>
-        </div>
-        <div class="search-container">
-            <input type="text" placeholder="Search" class="search-bar" />
-            <button class="search-btn">🔍</button>
-        </div>
-    </header>
-
-    <div class="explore-bar">
-        <button class="active" data-category="all">All</button>
-        <button data-category="music">Music</button>
-        <button data-category="gaming">Gaming</button>
-        <button data-category="movies">Movies</button>
-        <button data-category="news">News</button>
-        <button data-category="live">Live</button>
-        <button data-category="sports">Sports</button>
-        <button data-category="podcast">Podcast</button>
+  <header>
+    <div class="logo">
+      <h1 class="logo-text">VibeTube</h1>
     </div>
-
-    <div class="container">
-        <aside class="sidebar">
-            <ul>
-                <li class="active">Home</li>
-                <li>Trending</li>
-                <li>Shorts</li>
-                <li>Subscriptions</li>
-                <li class="separator"></li>
-                <li>Liked Videos</li>
-                <li>History</li>
-            </ul>
-        </aside>
-
-        <main id="main-content"></main>
+    <div class="search-container">
+      <input type="text" placeholder="Search" class="search-bar" />
+      <button class="search-btn">🔍</button>
     </div>
+  </header>
+
+  <div class="explore-bar">
+    <button class="active" data-category="all">All</button>
+    <button data-category="music">Music</button>
+    <button data-category="gaming">Gaming</button>
+    <button data-category="movies">Movies</button>
+    <button data-category="news">News</button>
+    <button data-category="live">Live</button>
+    <button data-category="sports">Sports</button>
+    <button data-category="podcast">Podcast</button>
+  </div>
+
+  <div class="container">
+    <aside class="sidebar">
+      <ul>
+        <li class="active">Home</li>
+        <li>Trending</li>
+        <li>Shorts</li>
+        <li>Subscriptions</li>
+        <li class="separator"></li>
+        <li>Liked Videos</li>
+        <li>History</li>
+      </ul>
+    </aside>
+    <main id="main-content"></main>
+  </div>
+
+  <script>
+// --- DOM Elements ---
+const mainContent = document.getElementById('main-content');
+const searchBar = document.querySelector('.search-bar');
+const searchBtn = document.querySelector('.search-btn');
+const sidebarItems = document.querySelectorAll('.sidebar li');
+const logo = document.querySelector('.logo');
+const exploreBar = document.querySelector('.explore-bar');
+
+// --- App State ---
+const API_KEY = 'AIzaSyAMFnIMGPqH6qFoPCgCO_INaD_smXKCcJg';
+let nextPageToken = null;
+let lastApiUrl = '';
+let isLoadingMore = false;
+let currentView = 'grid';
+let lastVideos = [];
+
+// --- Initialization ---
+window.addEventListener('load', () => {
+    fetchHomeVideos();
+});
+
+// --- Event Listeners ---
+logo.addEventListener('click', () => {
+    sidebarItems.forEach(i => i.classList.remove('active'));
+    document.querySelector('.sidebar li:first-child').classList.add('active');
+    fetchHomeVideos();
+});
+
+searchBtn.addEventListener('click', handleSearch);
+searchBar.addEventListener('keyup', e => e.key === 'Enter' && handleSearch());
+
+sidebarItems.forEach(item => {
+    if(item.classList.contains('separator')) return;
+    item.addEventListener('click', () => {
+        sidebarItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        const section = item.textContent.trim().toLowerCase();
+        handleSidebarClick(section);
+    });
+});
+
+exploreBar.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON') {
+        exploreBar.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        const category = e.target.dataset.category;
+        handleExploreClick(category);
+    }
+});
+
+window.addEventListener('scroll', () => {
+    if (currentView === 'player' || isLoadingMore || !nextPageToken) return;
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+        loadMoreVideos();
+    }
+});
+
+// --- Subscriptions ---
+function getSubscriptions() {
+    return JSON.parse(localStorage.getItem('subscriptions') || '[]');
+}
+
+function isSubscribed(channelId) {
+    const subscriptions = getSubscriptions();
+    return subscriptions.some(sub => sub.id === channelId);
+}
+
+function toggleSubscription(channelData, button) {
+    let subscriptions = getSubscriptions();
+    if (isSubscribed(channelData.id)) {
+        subscriptions = subscriptions.filter(sub => sub.id !== channelData.id);
+        button.textContent = 'Subscribe';
+        button.classList.remove('subscribed');
+    } else {
+        subscriptions.unshift({ id: channelData.id, title: channelData.title });
+        button.textContent = 'Subscribed';
+        button.classList.add('subscribed');
+    }
+    localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
+}
+
+async function showSubscriptions() {
+    const subscriptions = getSubscriptions();
+    if (subscriptions.length === 0) {
+        displayMessage('info', 'Aapne kisi channel ko subscribe nahi kiya hai.');
+        return;
+    }
+    // To keep it simple and API-friendly, we'll fetch videos from the most recent subscription.
+    const firstSub = subscriptions[0];
+    lastApiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${firstSub.id}&order=date&type=video&maxResults=20&key=${API_KEY}`;
+    const data = await fetchApi(lastApiUrl);
+    if (data) {
+        nextPageToken = data.nextPageToken;
+        lastVideos = data.items;
+        displayVideosGrid(data.items, true, false, `Latest from ${firstSub.title}`);
+    }
+}
+
+// --- Liked Videos ---
+function getLikedVideos() {
+    return JSON.parse(localStorage.getItem('likedVideos') || '[]');
+}
+
+function isVideoLiked(videoId) {
+    const likedVideos = getLikedVideos();
+    return likedVideos.some(video => video.id === videoId);
+}
+
+function toggleLike(videoData, button) {
+    let likedVideos = getLikedVideos();
+    if (isVideoLiked(videoData.id)) {
+        likedVideos = likedVideos.filter(video => video.id !== videoData.id);
+        button.classList.remove('liked');
+        button.innerHTML = '♡';
+    } else {
+        likedVideos.unshift(videoData);
+        button.classList.add('liked');
+        button.innerHTML = '♥';
+    }
+    localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
+}
+
+function showLikedVideos() {
+    const likedVideos = getLikedVideos();
+    if (likedVideos.length === 0) {
+        displayMessage('info', 'Aapne abhi tak koi video like nahi kiya hai.');
+        return;
+    }
+    displayVideosGrid(likedVideos, false, true);
+}
+
+// --- History ---
+function getHistory() {
+    return JSON.parse(localStorage.getItem('videoHistory') || '[]');
+}
+
+function addToHistory(videoData) {
+    let history = getHistory();
+    history = history.filter(item => item.id !== videoData.id);
+    history.unshift(videoData);
+    if (history.length > 50) history.pop();
+    localStorage.setItem('videoHistory', JSON.stringify(history));
+}
+
+function showHistory() {
+    const history = getHistory();
+    if (history.length === 0) {
+        displayMessage('info', 'Aapka watch history khaali hai.');
+        return;
+    }
+    displayVideosGrid(history, false, true);
+}
+
+// --- Navigation & Core Logic ---
+function handleSidebarClick(section) {
+    nextPageToken = null;
+    switch(section) {
+        case 'home': fetchHomeVideos(); break;
+        case 'trending': fetchTrendingVideos(); break; 
+        case 'shorts': fetchShorts(); break;
+        case 'subscriptions': showSubscriptions(); break;
+        case 'liked videos': showLikedVideos(); break;
+        case 'history': showHistory(); break;
+    }
+}
+
+function handleExploreClick(category) {
+    let videoCategoryId = '';
     
-    <script src="script.js"></script>
+    switch(category) {
+        case 'all':
+            fetchHomeVideos();
+            return;
+        case 'music': videoCategoryId = '10'; break;
+        case 'gaming': videoCategoryId = '20'; break;
+        case 'movies': videoCategoryId = '1'; break;
+        case 'news': videoCategoryId = '25'; break;
+        case 'sports': videoCategoryId = '17'; break;
+        case 'live':
+            fetchLiveVideos();
+            return;
+        case 'podcast':
+            searchVideos('podcast');
+            return;
+    }
+    searchByCategory(videoCategoryId, category);
+}
+
+function handleSearch() {
+    const query = searchBar.value.trim();
+    if (query) {
+        nextPageToken = null;
+        searchVideos(query);
+    }
+}
+
+// --- API Fetching ---
+async function fetchApi(url, isLoadMore = false) {
+    if (!isLoadMore) {
+         mainContent.innerHTML = '<p class="loading-message">Loading...</p>';
+    }
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            const errorData = await response.json();
+            const errorMessage = errorData.error?.message || 'An unknown API error occurred.';
+            throw new Error(errorMessage);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        displayMessage('error', `Videos load nahi ho sake. API key galat ho sakti hai ya quota exceed ho gaya hai. (Error: ${error.message})`);
+        return null;
+    }
+}
+
+async function fetchHomeVideos() {
+    lastApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&maxResults=20&regionCode=IN&key=${API_KEY}`;
+    const data = await fetchApi(lastApiUrl);
+    if (data) {
+        nextPageToken = data.nextPageToken;
+        lastVideos = data.items;
+        displayVideosGrid(lastVideos);
+    }
+}
+
+async function fetchTrendingVideos() {
+    lastApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&maxResults=20&regionCode=IN&videoCategoryId=10&key=${API_KEY}`;
+     const data = await fetchApi(lastApiUrl);
+     if (data) {
+         nextPageToken = data.nextPageToken;
+         lastVideos = data.items;
+         displayVideosGrid(lastVideos);
+     }
+}
+
+async function fetchShorts() {
+    lastApiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=%23shorts&type=video&videoDuration=short&maxResults=20&key=${API_KEY}`;
+    const data = await fetchApi(lastApiUrl);
+    if (data) {
+        nextPageToken = data.nextPageToken;
+        lastVideos = data.items;
+        displayVideosGrid(data.items, true, false, "Shorts");
+    }
+}
+
+async function fetchLiveVideos() {
+    lastApiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&eventType=live&type=video&maxResults=20&regionCode=IN&key=${API_KEY}`;
+    const data = await fetchApi(lastApiUrl);
+    if (data) {
+        nextPageToken = data.nextPageToken;
+        lastVideos = data.items;
+        displayVideosGrid(lastVideos, true, false, "Abhi Live");
+    }
+}
+
+async function searchVideos(query) {
+    lastApiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&q=${encodeURIComponent(query)}&type=video&key=${API_KEY}`;
+    const data = await fetchApi(lastApiUrl);
+    if (data) {
+        nextPageToken = data.nextPageToken;
+        lastVideos = data.items;
+        displayVideosGrid(lastVideos, true, false, `"${query}" ke liye results`);
+    }
+}
+
+async function searchByCategory(videoCategoryId, categoryName) {
+    lastApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&maxResults=20&regionCode=IN&videoCategoryId=${videoCategoryId}&key=${API_KEY}`;
+    const data = await fetchApi(lastApiUrl);
+    if (data) {
+        nextPageToken = data.nextPageToken;
+        lastVideos = data.items;
+        displayVideosGrid(lastVideos, false, false, `${categoryName.charAt(0).toUpperCase() + categoryName.slice(1)} mein trending`);
+    }
+}
+
+async function loadMoreVideos() {
+    if (!nextPageToken || isLoadingMore) return;
+    isLoadingMore = true;
+    
+    const container = mainContent.querySelector('.grid-view');
+    if (!container) {
+        isLoadingMore = false;
+        return; 
+    }
+
+    const loader = document.createElement('div');
+    loader.className = 'infinite-scroll-loader';
+    loader.innerHTML = 'Aur load ho raha hai...';
+    container.appendChild(loader);
+
+    const url = `${lastApiUrl}&pageToken=${nextPageToken}`;
+    const data = await fetchApi(url, true);
+    
+    loader.remove();
+    if (data) {
+        nextPageToken = data.nextPageToken;
+        lastVideos = [...lastVideos, ...data.items];
+        appendVideosToGrid(data.items, lastApiUrl.includes('/search'));
+    }
+    isLoadingMore = false;
+}
+
+// --- UI Rendering ---
+function displayMessage(type, message) {
+    currentView = 'grid';
+    mainContent.innerHTML = `<p class="${type}-message">${message}</p>`;
+}
+
+function displayVideosGrid(videos, isSearch = false, isHistory = false, title = "") {
+    currentView = 'grid';
+    mainContent.innerHTML = `
+        ${title ? `<h2 style="margin-bottom: 20px;">${title}</h2>` : ''}
+        <div class="grid-view"></div>
+    `;
+    if (!videos || videos.length === 0) {
+        displayMessage('info', 'Koi video nahi mila.');
+        return;
+    }
+    appendVideosToGrid(videos, isSearch, isHistory);
+}
+
+function appendVideosToGrid(videos, isSearch = false, isHistory = false) {
+    const grid = mainContent.querySelector('.grid-view');
+    videos.forEach(videoData => {
+        const videoId = isHistory ? videoData.id : (isSearch ? videoData.id.videoId : videoData.id);
+        if (!videoId) return;
+
+        const snippet = videoData.snippet;
+        const thumbnailUrl = snippet.thumbnails.high?.url || snippet.thumbnails.medium.url;
+
+        const videoEl = document.createElement('div');
+        videoEl.className = 'video';
+        videoEl.innerHTML = `
+            <div class="thumbnail-container">
+                <img src="${thumbnailUrl}" alt="${snippet.title}" onerror="this.onerror=null;this.src='https://placehold.co/480x360/222222/aaaaaa?text=Image+Not+Found';">
+            </div>
+            <div class="video-details">
+                <div>
+                    <h3>${snippet.title}</h3>
+                    <p>${snippet.channelTitle}</p>
+                </div>
+            </div>
+        `;
+        videoEl.addEventListener('click', () => showVideoPlayer(videoId));
+        grid.appendChild(videoEl);
+    });
+}
+
+async function showVideoPlayer(videoId) {
+    currentView = 'player';
+    mainContent.innerHTML = `<p class="loading-message">Player load ho raha hai...</p>`;
+    mainContent.className = 'player-view';
+
+    const videoDetailsData = await fetchApi(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`);
+    if (!videoDetailsData || videoDetailsData.items.length === 0) {
+        displayMessage('error', 'Video details load nahi ho sake.');
+        return;
+    }
+    const video = videoDetailsData.items[0];
+    addToHistory(video);
+
+    const suggestionsData = await fetchApi(`https://www.googleapis.com/youtube/v3/search?part=snippet&relatedToVideoId=${videoId}&type=video&maxResults=15&key=${API_KEY}`);
+
+    const liked = isVideoLiked(videoId);
+    const channelId = video.snippet.channelId;
+    const channelTitle = video.snippet.channelTitle;
+    const subscribed = isSubscribed(channelId);
+
+    mainContent.innerHTML = `
+        <div><button class="back-button" style="margin-bottom: 16px; background: var(--background-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 16px; border-radius: 20px; cursor: pointer;">← Wapas Jaye</button></div>
+        <div class="player-main-content">
+            <div class="player-main-column">
+                <div class="player-iframe-container">
+                    <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                </div>
+                <div class="player-video-details">
+                    <h2>${video.snippet.title}</h2>
+                    <div class="channel-info">
+                        <p>${channelTitle} • ${formatViews(video.statistics.viewCount)} • ${formatDate(video.snippet.publishedAt)}</p>
+                        <button class="subscribe-btn ${subscribed ? 'subscribed' : ''}">${subscribed ? 'Subscribed' : 'Subscribe'}</button>
+                    </div>
+                    <div class="actions">
+                        <button class="like-btn ${liked ? 'liked' : ''}">${liked ? '♥' : '♡'}</button>
+                        <button id="download-btn">Download</button>
+                    </div>
+                </div>
+            </div>
+            <div class="player-suggestions-column"></div>
+        </div>
+    `;
+    
+    const suggestionsContainer = mainContent.querySelector('.player-suggestions-column');
+    if (suggestionsData && suggestionsData.items) {
+         suggestionsData.items.forEach(suggestion => {
+             if (!suggestion.id.videoId) return;
+             const suggestionEl = document.createElement('div');
+             suggestionEl.className = 'suggestion-item';
+             suggestionEl.innerHTML = `
+                 <img src="${suggestion.snippet.thumbnails.medium.url}" alt="${suggestion.snippet.title}">
+                 <div class="suggestion-item-details">
+                     <h4>${suggestion.snippet.title}</h4>
+                     <p>${suggestion.snippet.channelTitle}</p>
+                 </div>
+             `;
+             suggestionEl.addEventListener('click', () => showVideoPlayer(suggestion.id.videoId));
+             suggestionsContainer.appendChild(suggestionEl);
+         });
+    }
+
+    mainContent.querySelector('.back-button').addEventListener('click', () => displayVideosGrid(lastVideos, lastApiUrl.includes('/search')));
+    mainContent.querySelector('.like-btn').addEventListener('click', (e) => toggleLike(video, e.target));
+    mainContent.querySelector('.subscribe-btn').addEventListener('click', (e) => toggleSubscription({ id: channelId, title: channelTitle }, e.target));
+    document.getElementById('download-btn').addEventListener('click', () => alert('Download feature sirf demo ke liye hai.'));
+}
+
+// --- Helper Functions ---
+const formatViews = (views) => views ? `${Number(views).toLocaleString()} views` : 'No views';
+const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  </script>
 </body>
 </html>
